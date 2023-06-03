@@ -1,0 +1,2 @@
+include pyohm/VERSION
+recursive-include pyohm py.typed
