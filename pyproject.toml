@@ -18,11 +18,11 @@ dynamic = ["version"]
 authors = [
   { name="Yan Zhang", email="dev.claude.yan.zhang@gmail.com" },
 ]
-description = "A python library to create and operate power systems."
+description = "A python library to create simple power grid and calculate powerflow."
 readme = "README.md"
-keywords = ["python", "power system", "power grid"]
+keywords = ["python", "power system", "power grid", "powerflow"]
 license = { file="LICENSE" }
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
