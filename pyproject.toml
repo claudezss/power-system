@@ -44,6 +44,7 @@ doc = [
     "wheel",
     "ipython",
     "sphinx-multiversion",
+    "pydata-sphinx-theme",
 ]
 test = [
     "pytest",
@@ -52,8 +53,8 @@ test = [
 
 
 [project.urls]
-"Homepage" = "https://github.com/claudezss/power-system"
-"Bug Tracker" = "https://github.com/claudezss/power-system/issues"
+"Homepage" = "https://github.com/claudezss/pyohm"
+"Bug Tracker" = "https://github.com/claudezss/pyohm/issues"
 
 
 [tool.isort]
