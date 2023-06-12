@@ -1,0 +1,20 @@
+site_name: PyOhm
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tabs
+plugins:
+  - search
+  - tags
+  - mknotebooks
+
+nav:
+  - Home: index.md
+  - Knowledge Base:
+      - Power System: knowledge_base/power_system/index.md
+      - Programming: knowledge_base/programming/index.md
+      - Machine Learning: knowledge_base/machine_learning/index.md
+      - Powerflow: knowledge_base/powerflow/index.md
+  - Experiments:
+      - Network: experiments/create_network.ipynb

@@ -40,12 +40,9 @@ dependencies = [
 
 dev = ["pre-commit"]
 doc = [
-    "sphinx",
-    "myst-parser",
     "wheel",
-    "ipython",
-    "sphinx-multiversion",
-    "pydata-sphinx-theme",
+    "mkdocs-material",
+    "mknotebooks"
 ]
 test = [
     "pytest",
