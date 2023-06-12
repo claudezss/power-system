@@ -162,3 +162,4 @@ cython_debug/
 .vscode/
 papers/
 .DS_Store
+public/

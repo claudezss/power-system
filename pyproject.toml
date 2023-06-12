@@ -32,7 +32,8 @@ classifiers = [
 ]
 
 dependencies = [
-    "pandas"
+    "pandas",
+    "pydantic"
 ]
 
 [project.optional-dependencies]
