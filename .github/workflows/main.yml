@@ -1,5 +1,5 @@
 
-name: "Heizer CI Tests"
+name: "PyOhm CI Tests"
 
 on: [push]
 
