@@ -67,7 +67,7 @@ profile = "black"
 line_length = 120
 max-line-length=120
 exclude =[".git", "__pycache__", "venv", "env", 'docs/*']
-include = ["pyohm/*"]
+include = ["pyohm/*", "tests/*"]
 
 [tool.mypy]
 strict=true

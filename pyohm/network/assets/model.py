@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from typing import Tuple, Optional
 import enum
+from typing import Optional, Tuple
+
+from pydantic import BaseModel, Field
+
 
 class AssetType(enum.Enum):
     """
@@ -21,9 +23,7 @@ class AssetType(enum.Enum):
 
 
 class Model(BaseModel):
-
     id: str = Field(..., alias="id")
     name: str = Field(..., alias="name")
     coordinates: Optional[Tuple[float, float]] = Field(..., alias="coordinates", default=None)
     asset_type: AssetType = Field(..., alias="asset_type")
-
