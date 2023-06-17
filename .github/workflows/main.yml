@@ -57,6 +57,6 @@ jobs:
           username: "root"
           password: ${{ secrets.SERVER_PASS }}
           source: "doc/"
-          target: "/var/www/html/pyohm/"
+          target: "/home/doc/pyohm"
           strip_components: 1
           overwrite: true
