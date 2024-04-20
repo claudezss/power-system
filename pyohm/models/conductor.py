@@ -1,5 +1,6 @@
 import math
 from datetime import datetime
+from math import acos, asin, cos, degrees, radians, sin, tan
 
 import pyohm.units as units
 from pyohm.models.base import Base
@@ -199,9 +200,9 @@ class Conductor(Base):
         """
         return (
             1.194
-            - math.cos(self.wind_direction)
-            + 0.194 * math.cos(2 * self.wind_direction)
-            + 0.368 * math.sin(2 * self.wind_direction)
+            - cos(radians(self.wind_direction))
+            + 0.194 * cos(radians(2 * self.wind_direction))
+            + 0.368 * sin(radians(2 * self.wind_direction))
         )
 
     @property
@@ -244,9 +245,9 @@ class Conductor(Base):
         """
         Z_c, Solar azimuth
         """
-        X = math.sin(self.hour_angle) / (
-            math.sin(self.latitude) * math.cos(self.hour_angle)
-            - math.cos(self.latitude) * math.tan(self.solar_declination)
+        X = sin(radians(self.hour_angle)) / (
+            sin(radians(self.latitude)) * cos(radians(self.hour_angle))
+            - cos(radians(self.latitude)) * tan(radians(self.solar_declination))
         )
         if X >= 0 and -180 <= self.hour_angle < 0:
             C = 0
@@ -259,19 +260,29 @@ class Conductor(Base):
         else:
             raise ValueError
 
-        Z_c = C + math.atan(X)
+        Z_c = C + degrees(math.atan(X))
 
         return Z_c
+
+    @property
+    def Z_c(self) -> float:
+        return self.solar_azimuth
 
     @property
     def solar_altitude(self) -> float:
         """
         Hc, Solar altitude
         """
-        return math.asin(
-            math.cos(self.latitude) * math.cos(self.solar_declination) * math.cos(self.hour_angle)
-            + math.sin(self.latitude) * math.sin(self.solar_declination)
+        return degrees(
+            asin(
+                cos(radians(self.latitude)) * cos(radians(self.solar_declination)) * cos(radians(self.hour_angle))
+                + sin(radians(self.latitude)) * sin(radians(self.solar_declination))
+            )
         )
+
+    @property
+    def H_c(self) -> float:
+        return self.solar_altitude
 
     @property
     def total_solar_and_sky_radiated_heat_intensity_at_sea_level(self) -> float:
@@ -297,6 +308,10 @@ class Conductor(Base):
         return Qs
 
     @property
+    def Q_s(self) -> float:
+        return self.total_solar_and_sky_radiated_heat_intensity_at_sea_level
+
+    @property
     def total_solar_and_sky_radiated_heat_intensity_factor(self) -> float:
         """
         K_solar,
@@ -318,11 +333,13 @@ class Conductor(Base):
         """
         q_s, Solar heat gain
         """
-        theta = math.acos(math.cos(self.solar_altitude) * math.cos(self.solar_altitude - self.azimuth_of_conductor))
+        theta = degrees(
+            acos(cos(radians(self.solar_altitude)) * cos(radians(self.solar_altitude - self.azimuth_of_conductor)))
+        )
         return (
             self.solar_absorption
             * self.total_solar_and_sky_radiated_heat_intensity
-            * math.sin(theta)
+            * sin(radians(theta))
             * self.conductor_outside_diameter
         )
 
@@ -382,3 +399,25 @@ class Conductor(Base):
     @property
     def q_c(self) -> float:
         return self.forced_convection_heat_loss
+
+    @property
+    def average_resistance(self) -> float:
+        return (
+            (self.conductor_ac_resistance_high - self.conductor_ac_resistance_low)
+            / (self.conductor_high_temperature - self.conductor_low_temperature)
+        ) * (self.conductor_surface_temperature - self.conductor_low_temperature) + self.conductor_ac_resistance_low
+
+    @property
+    def R_avg(self) -> float:
+        return self.average_resistance
+
+    @property
+    def conductor_current(self) -> float:
+        return math.sqrt(
+            (self.forced_convection_heat_loss + self.radiated_heat_loss - self.solar_heat_gain)
+            / self.average_resistance
+        )
+
+    @property
+    def I(self) -> float:
+        return self.conductor_current
