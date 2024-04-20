@@ -37,15 +37,15 @@ class DrakeConductorSpec(Base):
     kcmil: float = 795
 
     # feet to meter
-    diameter: float = 1.107 * 0.0254
+    diameter: float = 0.02814
 
     low_temperature: float = 25
 
     high_temperature: float = 75
 
-    ac_resistance_low: float = 0.0214 / 1000 / 0.3048 * 1.02
+    ac_resistance_low: float = 7.283e-5
 
-    ac_resistance_high: float = 0.0263 / 1000 / 0.3048
+    ac_resistance_high: float = 8.688e-5
 
     unit_mapping = {
         "kcmil": units.Kciml,
@@ -66,6 +66,8 @@ class Weather(Base):
 
 
 class Conductor(Base):
+
+    name: str = "Conductor"
 
     wind_speed: float
 
@@ -121,7 +123,7 @@ class Conductor(Base):
 
         self.aluminum_strand_layers_average_temperature = self.max_allowable_conductor_temperature
 
-        self.conductor_surface_temperature = 45.0
+        self.conductor_surface_temperature = 100.0
 
         self.latitude = 30.0
 
@@ -139,11 +141,15 @@ class Conductor(Base):
 
         self.azimuth_of_conductor = 90.0
 
+        self.emissivity = 0.8
+
+        self.solar_absorption = 0.8
+
     @property
     def number_of_day(self) -> int:
         start_date = datetime(year=self.date.year, month=1, day=1)
-        delta = start_date - self.date.replace(hour=0, minute=0, second=0, microsecond=0)
-        return delta.days
+        delta = self.date.replace(hour=0, minute=0, second=0, microsecond=0) - start_date
+        return delta.days + 1
 
     @property
     def t_film(self) -> float:
@@ -161,6 +167,10 @@ class Conductor(Base):
         return (1.293 - 1.525e-4 * self.elevation + 6.379e-9 * self.elevation**2) / (1 + 0.00367 * self.t_film)
 
     @property
+    def p_f(self) -> float:
+        return self.air_density
+
+    @property
     def air_viscosity(self) -> float:
         """
         µf, Absolute (dynamic) viscosity of air
@@ -168,11 +178,19 @@ class Conductor(Base):
         return float((1.458e-6 * (self.t_film + 273) ** 1.5) / (self.t_film + 383.4))
 
     @property
+    def u_f(self) -> float:
+        return self.air_viscosity
+
+    @property
     def air_thermal_conductivity(self) -> float:
         """
         kf, Thermal conductivity of air
         """
         return 2.424e-2 + 7.477e-5 * self.t_film - 4.407e-9 * (self.t_film**2)
+
+    @property
+    def k_f(self) -> float:
+        return self.air_thermal_conductivity
 
     @property
     def wind_direction_factor(self) -> float:
@@ -183,8 +201,12 @@ class Conductor(Base):
             1.194
             - math.cos(self.wind_direction)
             + 0.194 * math.cos(2 * self.wind_direction)
-            + 0.68 * math.sin(2 * self.wind_direction)
+            + 0.368 * math.sin(2 * self.wind_direction)
         )
+
+    @property
+    def k_angle(self) -> float:
+        return self.wind_direction_factor
 
     @property
     def radiated_heat_loss(self) -> float:
@@ -199,12 +221,16 @@ class Conductor(Base):
         )
 
     @property
+    def q_r(self) -> float:
+        return self.radiated_heat_loss
+
+    @property
     def solar_declination(self) -> float:
         """
         δ, The solar declination (the angular distance of the sun from the Earth’s equator), δ, in degrees
         :return:
         """
-        return 23.45 * math.sin(((284 + self.number_of_day) / 365) * 360)
+        return 23.45 * math.sin(math.radians(((284 + self.number_of_day) / 365) * 360))
 
     @property
     def hour_angle(self) -> float:
@@ -292,6 +318,67 @@ class Conductor(Base):
         """
         q_s, Solar heat gain
         """
-        return 0
-        # theta = math.acos(math.cos() *  (self.solar_altitude -))
-        # return self.solar_absorption * self.total_solar_and_sky_radiated_heat_intensity * math.sin()
+        theta = math.acos(math.cos(self.solar_altitude) * math.cos(self.solar_altitude - self.azimuth_of_conductor))
+        return (
+            self.solar_absorption
+            * self.total_solar_and_sky_radiated_heat_intensity
+            * math.sin(theta)
+            * self.conductor_outside_diameter
+        )
+
+    @property
+    def q_s(self) -> float:
+        return self.solar_heat_gain
+
+    @property
+    def reynolds_number(self) -> float:
+        """
+        N_Re, The Reynolds number
+        """
+        return (self.conductor_outside_diameter * self.air_density * self.wind_speed) / self.air_viscosity
+
+    @property
+    def N_Re(self) -> float:
+        return self.reynolds_number
+
+    @property
+    def natural_convection_heat_loss(self) -> float:
+        """
+        q_cn
+        """
+        return (
+            3.645
+            * self.air_density**0.5
+            * self.conductor_outside_diameter**0.75
+            * (self.conductor_surface_temperature - self.ambient_temperature) ** 1.25
+        )
+
+    @property
+    def q_cn(self) -> float:
+        return self.natural_convection_heat_loss
+
+    @property
+    def forced_convection_heat_loss(self) -> float:
+        """
+        q_c
+        """
+        q_c1 = (
+            self.wind_direction_factor
+            * (1.05 + 1.35 * self.reynolds_number**0.52)
+            * self.air_thermal_conductivity
+            * (self.conductor_surface_temperature - self.ambient_temperature)
+        )
+
+        q_c2 = (
+            self.wind_direction_factor
+            * 0.754
+            * self.reynolds_number**0.6
+            * self.air_thermal_conductivity
+            * (self.conductor_surface_temperature - self.ambient_temperature)
+        )
+
+        return max(q_c1, q_c2)
+
+    @property
+    def q_c(self) -> float:
+        return self.forced_convection_heat_loss
