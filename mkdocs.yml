@@ -16,5 +16,5 @@ nav:
       - Programming: knowledge_base/programming/index.md
       - Machine Learning: knowledge_base/machine_learning/index.md
       - Powerflow: knowledge_base/powerflow/index.md
-  - Experiments:
-      - Network: experiments/create_network.ipynb
+  - Tutorials:
+      - Calculate Conductor Current Based on Temperature: tutorials/conductor_current.ipynb
